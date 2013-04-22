@@ -1,0 +1,20 @@
+import rhinoscriptsyntax as rs
+import math
+
+srf = rs.GetObject("Select Srf", 8)
+pts = {}
+
+nrows = rs.GetInteger("Panels in X")
+ncolumns = rs.GetInteger("panels in Y")
+
+rs.SelectObject(srf)
+rs.Command("-Reparameterize 0 "+str(nrows)+" 0 "+str(ncolumns))#reparameterize surface
+
+for i in range(0,nrows+1):
+    for j in range(0,ncolumns+1):
+        pts[(i,j)] = rs.EvaluateSurface(srf, i,j)
+
+for i in range(0, nrows):#loop through dictionary and create panels.
+    for j in range(0, ncolumns):
+        rs.AddSrfPt([pts[i,j],pts[i+1,j],pts[i+1,j+1],pts[i,j+1]])
+        rs.AddCurve([pts[i,j],pts[i+1,j],pts[i+1,j+1],pts[i,j+1],pts[i,j]])
