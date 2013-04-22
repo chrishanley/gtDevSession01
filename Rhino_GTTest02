@@ -1,0 +1,29 @@
+import rhinoscriptsyntax as rs
+import mymodule as m
+
+srf = rs.GetObject("Select Surface",16)
+pts = {}
+
+nRows = rs.GetInteger("Panels in X")
+nColumns = rs.GetInteger("Panels in Y")
+
+rs.SelectObject(srf)
+rs.Command("-Reparameterize 0 "+str(nRows)+" 0 "+str(nColumns))
+U = rs.SurfaceDomain(srf,0)
+V = rs.SurfaceDomain(srf,1)
+rs.EnableRedraw(False)
+for i in range(0,nRows+1):
+  for j in range(0,nColumns+1):
+		pts[(i,j)] = rs.EvaluateSurface(srf,i,j)
+
+for i in range(0,nRows):
+	for j in range(0,nColumns):
+		panel = rs.AddMesh([pts[i,j],pts[i+1,j],pts[i+1,j+1],pts[i,j+1]],[[0,1,2,3]]) #create surface panels by walking the grid
+		normals = rs.MeshFaceNormals(panel)
+#		normal = rs.SurfaceNormal(panel, [i,j]) #centroid of panel
+#		print(normals)
+		dblDotProduct = rs.VectorDotProduct(normals,[0,0,1])
+#		print (dblDotProduct)
+		remap = m.ratiodomain(255,dblDotProduct,-1,1)#use ratiodomain definition(in mymodule.py) to remap
+		rs.ObjectColor(panel, [0,remap,0])#change panel color based on slope deviation from Z (R,reampvalue,G)	
+		rs.MeshVertexColors(panel,remap )	
